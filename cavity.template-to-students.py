@@ -874,6 +874,41 @@ def point_Jacobi():
     # !************ADD CODING HERE FOR INTRO CFD STUDENTS************ */
     # !************************************************************** */
 
+    # Section 5: Explicit and Implicit Methods - Page 74 (Psuedocode)
+    # Section 6: Incompressible Flows - Page 17 (S=Sx+Sy which is artificial viscosity)
+    # Semester Project Overview - Pages 5-6
+
+    # IMPORTANT!! s variable is source terms which is just the manufactured solution terms I think of fxmtm(x,y) and fmass(x,y) in the notes
+    # s[i, j, 0] = (imms)*srcmms_mass(x, y)
+    # s[i, j, 1] = (imms)*srcmms_xmtm(x, y) 
+    # s[i, j, 2] = (imms)*srcmms_ymtm(x, y)
+    # this took way too long to find
+    for i in range(1,imax-1):
+        for j in range(1,jmax-1):
+            uvel = uold[i,j,1] # u velocity
+            vvel = uold[i,j,2] # v velocity
+            uvel2 = uvel**2+vvel**2 # magnitude of local velocity squared
+
+            beta2 = max(uvel2,rkappa*vel2ref) # beta squared parameter for for time derivative preconditioning
+
+            S = artviscx[i,j]+artviscy[i,j] # artificial viscosity
+
+            dpdx = (uold[i+1,j,0]-uold[i-1,j,0])/(2*dx)         # First derivative of pressure w.r.t. x
+            dudx = (uold[i+1,j,1]-uold[i-1,j,1])/(2*dx)         # First derivative of x velocity w.r.t. x
+            dvdx = (uold[i+1,j,2]-uold[i-1,j,2])/(2*dx)         # First derivative of y velocity w.r.t. x
+            dpdy = (uold[i,j+1,0]-uold[i,j-1,0])/(2*dy)         # First derivative of pressure w.r.t. y
+            dudy = (uold[i,j+1,1]-uold[i,j-1,1])/(2*dy)         # First derivative of x velocity w.r.t. y
+            dvdy = (uold[i,j+1,2]-uold[i,j-1,2])/(2*dy)         # First derivative of y velocity w.r.t. y
+            d2udx2 = (uold[i+1,j,1]-2*uold[i,j,1]+uold[i-1,j,1])/(dx**2)       # Second derivative of x velocity w.r.t. x
+            d2vdx2 = (uold[i+1,j,2]-2*uold[i,j,2]+uold[i-1,j,2])/(dx**2)       # Second derivative of y velocity w.r.t. x
+            d2udy2 = (uold[i,j+1,1]-2*uold[i,j,1]+uold[i,j-1,1])/(dy**2)       # Second derivative of x velocity w.r.t. y
+            d2vdy2 = (uold[i,j+1,2]-2*uold[i,j,2]+uold[i,j-1,2])/(dy**2)       # Second derivative of y velocity w.r.t. y
+
+            u[i,j,0] = uold[i,j,0]-beta2*dt[i,j]*(rho*dudx+rho*dvdy-S-s[i,j,0]) # mass
+            u[i,j,1] = uold[i,j,1]-dt[i,j]/rho*(rho*uold[i,j,1]*dudx+rho*uold[i,j,2]*dudy+dpdx-rmu*d2udx2-rmu*d2udy2-s[i,j,1]) # x-mtm
+            u[i,j,2] = uold[i,j,2]-dt[i,j]/rho*(rho*uold[i,j,2]*dvdx+rho*uold[i,j,1]*dvdy+dpdy-rmu*d2vdx2-rmu*d2vdy2-s[i,j,2]) # y-mtm
+    # check iterative convergence? I think it calls that in the main function
+        
 # ************************************************************************
 
 
