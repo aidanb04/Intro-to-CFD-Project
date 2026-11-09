@@ -621,13 +621,13 @@ def compute_time_step(dtmin):
 
     # dtvisc       # Viscous time step stability criteria (constant over domain)
     # uvel2        # Local velocity squared
-    # beta2        # Beta squared paramete for time derivative preconditioning
+    # beta2        # Beta squared parameter for time derivative preconditioning
     # lambda_x     # Max absolute value eigenvalue in (x,t)
     # lambda_y     # Max absolute value eigenvalue in (y,t)
     # lambda_max   # Max absolute value eigenvalue (used in convective time step computation)
     # dtconv       # Local convective time step restriction
 
-    global four, half, fourth
+    global four, half, fourth # what are these for?
     global vel2ref, rmu, rho, dx, dy, cfl, rkappa, imax, jmax
     global u, dt
 
@@ -636,7 +636,7 @@ def compute_time_step(dtmin):
     # !**************************************************************
     
     # Semester Project Overview - Page 7-8 & 12
-    # nu, dtvisc, lambda_x, lambda_y, dtconv, vel2ref (aka Vinf aka Ulid), delta_t[i,j] (use the one with cfl), dtmin (delta_t_max from psuedo code)
+    # nu, dtvisc, lambda_x, lambda_y, dtconv, vel2ref (aka Vinf), delta_t[i,j] (use the one with cfl), dtmin (delta_t_max from psuedo code)
     
     # Section 6: Incompressible Flows - Page 11
     # beta2(Use 2D flow beta2), uvel2(Vinf in lecture)
