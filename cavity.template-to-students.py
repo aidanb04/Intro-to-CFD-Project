@@ -701,7 +701,7 @@ def Compute_Artificial_Viscosity():
     # j                        # j index (y direction)
 
     # uvel2        # Local velocity squared
-    # beta2        # Beta squared paramete for time derivative preconditioning
+    # beta2        # Beta squared parameter for time derivative preconditioning
     # lambda_x     # Max absolute value e-value in (x,t)
     # lambda_y     # Max absolute value e-value in (y,t)
     # d4pdx4       # 4th derivative of pressure w.r.t. x
@@ -721,6 +721,46 @@ def Compute_Artificial_Viscosity():
     # !************************************************************** */
     # !************ADD CODING HERE FOR INTRO CFD STUDENTS************ */
     # !************************************************************** */
+
+    # Section 6: Incompressible Flows - Pages 17-19
+    # only second interior points included due to stencil. need modification near boundary
+    for i in range(2,imax-2):
+            for j in range(1,jmax-1):
+                uvel = u[i,j,1] # u velocity
+                vvel = u[i,j,2] # v velocity
+                uvel2 = uvel**2+vvel**2 # magnitude of local velocity squared
+
+                beta2 = max(uvel2,rkappa*vel2ref) # beta squared parameter for for time derivative preconditioning
+
+                lambda_x = 0.5*(abs(uvel)+math.sqrt(uvel**2+4*beta2)) # Max absolute value eigenvalue in (x,t)
+
+                d4pdx4 = (u[i+2,j,0]-4*u[i+1,j,0]+6*u[i,j,0]-4*u[i-1,j,0]+u[i-2,j,0])/(dx**4)
+                mueffx = -abs(lambda_x)*Cx*dx**3/(beta2)
+                artviscx[i,j] = mueffx*d4pdx4
+
+    for i in range(1,imax-1):
+        for j in range(2,jmax-2):
+                uvel = u[i,j,1] # u velocity
+                vvel = u[i,j,2] # v velocity
+                uvel2 = uvel**2+vvel**2 # magnitude of local velocity squared
+
+                beta2 = max(uvel2,rkappa*vel2ref) # beta squared parameter for for time derivative preconditioning
+
+                lambda_y = 0.5*(abs(vvel)+math.sqrt(vvel**2+4*beta2)) # Max absolute value eigenvalue in (x,t)
+
+                d4pdy4 = (u[i,j+2,0]-4*u[i,j+1,0]+6*u[i,j,0]-4*u[i,j-1,0]+u[i,j-2,0])/(dy**4)
+                mueffy = -abs(lambda_y)*Cy*dy**3/(beta2)
+                artviscy[i,j] = mueffy*d4pdy4
+
+    # Near-boundary artificial viscosity
+    # Left and right walls
+    for j in range(1,jmax-1):
+        artviscx[1,j] = 2*artviscx[2,j]-artviscx[3,j]
+        artviscx[imax-2,j] = 2*artviscx[imax-3,j]-artviscx[imax-4,j]
+    # Top and bottom walls
+    for i in range(1,imax-1):
+        artviscy[i,1] = 2*artviscy[i,2]-artviscy[i,3]
+        artviscy[i,jmax-2] = 2*artviscy[i,jmax-3]-artviscy[i,jmax-4]
 
 # ************************************************************************
 
