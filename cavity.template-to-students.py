@@ -753,7 +753,7 @@ def Compute_Artificial_Viscosity():
                 mueffy = -abs(lambda_y)*Cy*dy**3/(beta2)
                 artviscy[i,j] = mueffy*d4pdy4
 
-    # Near-boundary artificial viscosity
+    # Near-boundary artificial viscosity (used 2nd order linear extrapolation)
     # Left and right walls
     for j in range(1,jmax-1):
         artviscx[1,j] = 2*artviscx[2,j]-artviscx[3,j]
