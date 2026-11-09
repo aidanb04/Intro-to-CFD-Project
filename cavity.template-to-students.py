@@ -968,6 +968,56 @@ def check_iterative_convergence(n, res, resinit, ninit, rtime, dtmin):
     # !************ADD CODING HERE FOR INTRO CFD STUDENTS************ */
     # !************************************************************** */
 
+    # Section 5: Explicit and Implicit Methods - Pages 27-29
+    # Seems like we literally do the same thing as in point jacobi but use just current iteration to get current residual?
+
+    R0 = 0
+    R1 = 0
+    R2 = 0
+    for i in range(1,imax-1):
+            for j in range(1,jmax-1):
+                uvel = u[i,j,1] # u velocity
+                vvel = u[i,j,2] # v velocity
+                uvel2 = uvel**2+vvel**2 # magnitude of local velocity squared
+    
+                beta2 = max(uvel2,rkappa*vel2ref) # beta squared parameter for for time derivative preconditioning
+    
+                S = artviscx[i,j]+artviscy[i,j] # artificial viscosity
+    
+                dpdx = (u[i+1,j,0]-u[i-1,j,0])/(2*dx)         # First derivative of pressure w.r.t. x
+                dudx = (u[i+1,j,1]-u[i-1,j,1])/(2*dx)         # First derivative of x velocity w.r.t. x
+                dvdx = (u[i+1,j,2]-u[i-1,j,2])/(2*dx)         # First derivative of y velocity w.r.t. x
+                dpdy = (u[i,j+1,0]-u[i,j-1,0])/(2*dy)         # First derivative of pressure w.r.t. y
+                dudy = (u[i,j+1,1]-u[i,j-1,1])/(2*dy)         # First derivative of x velocity w.r.t. y
+                dvdy = (u[i,j+1,2]-u[i,j-1,2])/(2*dy)         # First derivative of y velocity w.r.t. y
+                d2udx2 = (u[i+1,j,1]-2*u[i,j,1]+u[i-1,j,1])/(dx**2)       # Second derivative of x velocity w.r.t. x
+                d2vdx2 = (u[i+1,j,2]-2*u[i,j,2]+u[i-1,j,2])/(dx**2)       # Second derivative of y velocity w.r.t. x
+                d2udy2 = (u[i,j+1,1]-2*u[i,j,1]+u[i,j-1,1])/(dy**2)       # Second derivative of x velocity w.r.t. y
+                d2vdy2 = (u[i,j+1,2]-2*u[i,j,2]+u[i,j-1,2])/(dy**2)       # Second derivative of y velocity w.r.t. y
+    
+                R0 += (rho*dudx+rho*dvdy-S-s[i,j,0])**2 # mass residual squared
+                R1 += (rho*u[i,j,1]*dudx+rho*u[i,j,2]*dudy+dpdx-rmu*d2udx2-rmu*d2udy2-s[i,j,1])**2 # x-mtm residual squared
+                R2 += (rho*u[i,j,2]*dvdx+rho*u[i,j,1]*dvdy+dpdy-rmu*d2vdx2-rmu*d2vdy2-s[i,j,2])**2 # y-mtm residual squared
+    
+    N = (imax-2)*(jmax-2) # num of nodes excluding boundaries
+    res0 = np.sqrt(R0/N)
+    res1 = np.sqrt(R1/N)
+    res2 = np.sqrt(R2/N)
+  
+    if n == ninit:
+        resinit[0] = res0
+        resinit[1] = res1
+        resinit[2] = res2
+
+    # relative residuals
+    res[0] = res0/max(resinit[0.0],fsmall) 
+    res[1] = res1/max(resinit[1.0],fsmall)
+    res[2] = res2/max(resinit[2.0],fsmall)
+    conv = np.max(res)
+        
+
+
+
     # Write iterative residuals every 10 iterations
     if n % 10 == 0 or n == ninit:
         fp1.write(str(n)+" "+str(rtime)+" " +
