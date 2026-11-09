@@ -634,7 +634,40 @@ def compute_time_step(dtmin):
     # !**************************************************************
     # !************ADD CODING HERE FOR INTRO CFD STUDENTS************
     # !**************************************************************
+    
+    # Semester Project Overview - Page 7-8 & 12
+    # nu, dtvisc, lambda_x, lambda_y, dtconv, vel2ref (aka Vinf aka Ulid), delta_t[i,j] (use the one with cfl), dtmin (delta_t_max from psuedo code)
+    
+    # Section 6: Incompressible Flows - Page 11
+    # beta2(Use 2D flow beta2), uvel2(Vinf in lecture)
 
+
+    dtmin = 1.0e99
+    
+    nu = rmu/rho
+    # assuming dtvisc is the same as deltd from notes since it has the viscous term in it. Could be wrong
+    dtvisc = dx*dy/(4*nu) # Viscous time step stability criteria (constant over domain)
+
+    for i in range(1,imax-1):
+        for j in range(1,jmax-1):
+            uvel = u[i,j,1] # u velocity
+            vvel = u[i,j,2] # v velocity
+            uvel2 = uvel**2+vvel**2 # magnitude of local velocity squared
+
+            beta2 = max(uvel2,rkappa*vel2ref) # beta squared parameter for for time derivative preconditioning
+
+            lambda_x = 0.5*(abs(uvel)+math.sqrt(uvel**2+4*beta2)) # Max absolute value eigenvalue in (x,t)
+            lambda_y = 0.5*(abs(vvel)+math.sqrt(vvel**2+4*beta2)) # Max absolute value eigenvalue in (x,t)
+
+            lambda_max = max(lambda_x,lambda_y) # Max lambda (says max(lambda_x,lambda_x) in notes but I think it should be max(lambda_x,lambda_y)?)
+            
+            dtconv = min(dx,dy)/(lambda_max) # Local convective time step restriction
+            
+            # local time step (max allowable at i,j)
+            delta_t[i,j] = cfl*min(dtconv,dtvisc) #_______ ! Array
+            # global time step (max allowable in domain)
+            dtmin = min(delta_t[i,j],delta_t_max)
+        
     return dtmin
 
 # ************************************************************************
