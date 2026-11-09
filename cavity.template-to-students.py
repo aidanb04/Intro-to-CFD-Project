@@ -724,6 +724,7 @@ def Compute_Artificial_Viscosity():
 
     # Section 6: Incompressible Flows - Pages 17-19
     # only second interior points included due to stencil. need modification near boundary
+    # also some global variables are unused, but I think those are for the 2nd order FDE option and not required?
     for i in range(2,imax-2):
             for j in range(1,jmax-1):
                 uvel = u[i,j,1] # u velocity
