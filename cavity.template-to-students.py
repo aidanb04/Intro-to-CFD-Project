@@ -735,7 +735,7 @@ def Compute_Artificial_Viscosity():
 
                 lambda_x = 0.5*(abs(uvel)+math.sqrt(uvel**2+4*beta2)) # Max absolute value eigenvalue in (x,t)
 
-                d4pdx4 = (u[i+2,j,0]-4*u[i+1,j,0]+6*u[i,j,0]-4*u[i-1,j,0]+u[i-2,j,0])/(dx**4)
+                d4pdx4 = (u[i+2,j,0]-4*u[i+1,j,0]+6*u[i,j,0]-4*u[i-1,j,0]+u[i-2,j,0])/(dx**4) # 4th derivative of pressure w.r.t. x
                 mueffx = -abs(lambda_x)*Cx*dx**3/(beta2)
                 artviscx[i,j] = mueffx*d4pdx4
 
@@ -749,7 +749,7 @@ def Compute_Artificial_Viscosity():
 
                 lambda_y = 0.5*(abs(vvel)+math.sqrt(vvel**2+4*beta2)) # Max absolute value eigenvalue in (x,t)
 
-                d4pdy4 = (u[i,j+2,0]-4*u[i,j+1,0]+6*u[i,j,0]-4*u[i,j-1,0]+u[i,j-2,0])/(dy**4)
+                d4pdy4 = (u[i,j+2,0]-4*u[i,j+1,0]+6*u[i,j,0]-4*u[i,j-1,0]+u[i,j-2,0])/(dy**4) # 4th derivative of pressure w.r.t. x
                 mueffy = -abs(lambda_y)*Cy*dy**3/(beta2)
                 artviscy[i,j] = mueffy*d4pdy4
 
