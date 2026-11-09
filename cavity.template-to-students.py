@@ -302,6 +302,23 @@ def bndry():
     # !************ADD CODING HERE FOR INTRO CFD STUDENTS************ */
     # !************************************************************** */
 
+    # Semester Project Overview - Page 10
+    # Bottom and side walls: u = v = 0
+    # Top wall: u = ulid = uinf, v = 0
+    # I think corners are excluded? That's what it shows in the picture on Page 10
+    u[0, 1:jmax-1, 1:3] = 0.0 # Left wall
+    u[imax-1, 1:jmax-1, 1:3] = 0.0 # Right wall
+    u[1:imax-1, 0, 1:3] = 0.0 # Bottom wall
+    u[1:imax-1,jmax-1, 1] = uinf # Top wall u component
+    u[1:imax-1,jmax-1, 2] = 0.0 # Top wall v component
+
+    # Still Page 10
+    # Use linear extrapolatoin for pressure at wall of p1 = 2*p2 - p3 with last 3 points
+    u[0,1:jmax-1, 0] = 2*u[1,1:jmax-1,0]-u[2,1:jmax-1,0] # Left wall
+    u[imax-1,1:jmax-1,0] = 2*u[imax-2,1:jmax-1,0]-u[imax-3,1:jmax-1,0] # Right wall
+    u[1:imax-1, 0, 0] = 2*u[1:imax-1,1,0]-u[1:imax-1,2,0] # Bottom wall
+    u[1:imax-1,jmax-1,0] = 2*u[1:imax-1, jmax-2, 0]-u[1:imax-1,jmax-3,0] # Top wall
+    
 # ************************************************************************
 
 
