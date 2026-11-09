@@ -982,7 +982,7 @@ def check_iterative_convergence(n, res, resinit, ninit, rtime, dtmin):
     
                 beta2 = max(uvel2,rkappa*vel2ref) # beta squared parameter for for time derivative preconditioning
     
-                S = artviscx[i,j]+artviscy[i,j] # artificial viscosity
+                S = artviscx[i,j]+artviscy[i,j] # artificial viscosity (wait for this its not a global variable inputted into this func so maybe this is wrong?)
     
                 dpdx = (u[i+1,j,0]-u[i-1,j,0])/(2*dx)         # First derivative of pressure w.r.t. x
                 dudx = (u[i+1,j,1]-u[i-1,j,1])/(2*dx)         # First derivative of x velocity w.r.t. x
@@ -995,7 +995,7 @@ def check_iterative_convergence(n, res, resinit, ninit, rtime, dtmin):
                 d2udy2 = (u[i,j+1,1]-2*u[i,j,1]+u[i,j-1,1])/(dy**2)       # Second derivative of x velocity w.r.t. y
                 d2vdy2 = (u[i,j+1,2]-2*u[i,j,2]+u[i,j-1,2])/(dy**2)       # Second derivative of y velocity w.r.t. y
     
-                R0 += (rho*dudx+rho*dvdy-S-s[i,j,0])**2 # mass residual squared
+                R0 += (rho*dudx+rho*dvdy-s[i,j,0])**2 # mass residual squared
                 R1 += (rho*u[i,j,1]*dudx+rho*u[i,j,2]*dudy+dpdx-rmu*d2udx2-rmu*d2udy2-s[i,j,1])**2 # x-mtm residual squared
                 R2 += (rho*u[i,j,2]*dvdx+rho*u[i,j,1]*dvdy+dpdy-rmu*d2vdx2-rmu*d2vdy2-s[i,j,2])**2 # y-mtm residual squared
     
