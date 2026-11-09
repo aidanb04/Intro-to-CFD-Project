@@ -681,9 +681,9 @@ def compute_time_step(dtmin):
             dtconv = min(dx,dy)/(lambda_max) # Local convective time step restriction
             
             # local time step (max allowable at i,j)
-            delta_t[i,j] = cfl*min(dtconv,dtvisc) #_______ ! Array
+            dt[i,j] = cfl*min(dtconv,dtvisc) #_______ ! Array
             # global time step (max allowable in domain)
-            dtmin = min(delta_t[i,j],delta_t_max)
+            dtmin = min(dt[i,j],dtmin)
         
     return dtmin
 
