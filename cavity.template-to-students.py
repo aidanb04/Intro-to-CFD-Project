@@ -34,8 +34,8 @@ global ummsArray  # Array of umms values (funtion umms evaluated at all nodes)
 
 
 # ************* Following are fixed parameters for array sizes **************
-imax = 65     # * Number of points in the x-direction (use odd numbers only)
-jmax = 65   # * Number of points in the y-direction (use odd numbers only)
+imax = 17     # * Number of points in the x-direction (use odd numbers only)
+jmax = 17   # * Number of points in the y-direction (use odd numbers only)
 neq = 3      # * Number of equation to be solved ( = 3: mass, x-mtm, y-mtm)
 
 # **********************************************
@@ -68,14 +68,14 @@ iterout = 500            # Number of time steps between solution output
 imms = 1                  # Manufactured solution flag: = 1 for manuf. sol., = 0 otherwise
 isgs = 0                  # Symmetric Gauss-Seidel  flag: = 1 for SGS, = 0 for point Jacobi
 # Restart flag: = 1 for restart (file 'restart.in', = 0 for initial run
-irstr = 1
+irstr = 0
 # Order of pressure gradient: 0 = 2nd, 1 = 3rd (not needed)
 ipgorder = 0
 # variable to be used as the limiter sensor (= 0 for pressure)
 lim = 0
 residualOut = 10          # Number of timesteps between residual output
 
-cfl = 0.5               # CFL number used to determine time step
+cfl = 0.1               # CFL number used to determine time step
 Cx = 0.01               # Parameter for 4th order artificial viscosity in x
 Cy = 0.01               # Parameter for 4th order artificial viscosity in y
 toler = 1.e-10          # Tolerance for iterative residual convergence
@@ -971,6 +971,7 @@ def check_iterative_convergence(n, res, resinit, ninit, rtime, dtmin):
     # Section 5: Explicit and Implicit Methods - Pages 27-29
     # Seems like we literally do the same thing as in point jacobi but use just current iteration to get current residual?
 
+    global rho, rmu, dx, dy, s, artviscx, artviscy
     R0 = 0
     R1 = 0
     R2 = 0
@@ -1004,15 +1005,15 @@ def check_iterative_convergence(n, res, resinit, ninit, rtime, dtmin):
     res1 = np.sqrt(R1/N)
     res2 = np.sqrt(R2/N)
   
-    if n == ninit:
+    if n == ninit and irstr == 0:
         resinit[0] = res0
         resinit[1] = res1
         resinit[2] = res2
 
     # relative residuals
-    res[0] = res0/max(resinit[0.0],fsmall) 
-    res[1] = res1/max(resinit[1.0],fsmall)
-    res[2] = res2/max(resinit[2.0],fsmall)
+    res[0] = res0/max(resinit[0],fsmall) 
+    res[1] = res1/max(resinit[1],fsmall)
+    res[2] = res2/max(resinit[2],fsmall)
     conv = np.max(res)
         
 
