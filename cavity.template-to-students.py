@@ -34,8 +34,8 @@ global ummsArray  # Array of umms values (funtion umms evaluated at all nodes)
 
 
 # ************* Following are fixed parameters for array sizes **************
-imax = 17     # * Number of points in the x-direction (use odd numbers only)
-jmax = 17   # * Number of points in the y-direction (use odd numbers only)
+imax = 33     # * Number of points in the x-direction (use odd numbers only)
+jmax = 33   # * Number of points in the y-direction (use odd numbers only)
 neq = 3      # * Number of equation to be solved ( = 3: mass, x-mtm, y-mtm)
 
 # **********************************************
@@ -64,7 +64,7 @@ six = 6.0
 # -------- User sets inputs here  --------
 
 nmax = 500000             # Maximum number of iterations
-iterout = 500            # Number of time steps between solution output
+iterout = 5000            # Number of time steps between solution output
 imms = 1                  # Manufactured solution flag: = 1 for manuf. sol., = 0 otherwise
 isgs = 0                  # Symmetric Gauss-Seidel  flag: = 1 for SGS, = 0 for point Jacobi
 # Restart flag: = 1 for restart (file 'restart.in', = 0 for initial run
@@ -73,14 +73,14 @@ irstr = 0
 ipgorder = 0
 # variable to be used as the limiter sensor (= 0 for pressure)
 lim = 0
-residualOut = 10          # Number of timesteps between residual output
+residualOut = 100          # Number of timesteps between residual output
 
-cfl = 0.1               # CFL number used to determine time step
+cfl = 1               # CFL number used to determine time step
 Cx = 0.01               # Parameter for 4th order artificial viscosity in x
 Cy = 0.01               # Parameter for 4th order artificial viscosity in y
 toler = 1.e-10          # Tolerance for iterative residual convergence
 rkappa = 0.1            # Time derivative preconditioning constant
-Re = 100.0              # Reynolds number = rho*Uinf*L/rmu
+Re = 10.0              # Reynolds number = rho*Uinf*L/rmu
 # Initial pressure (N/m^2) -> from MMS value at cavity center
 pinf = 0.801333844662
 uinf = 1.0              # Lid velocity (m/s)
@@ -906,7 +906,7 @@ def point_Jacobi():
 
             u[i,j,0] = uold[i,j,0]-beta2*dt[i,j]*(rho*dudx+rho*dvdy-S-s[i,j,0]) # mass
             u[i,j,1] = uold[i,j,1]-dt[i,j]/rho*(rho*uold[i,j,1]*dudx+rho*uold[i,j,2]*dudy+dpdx-rmu*d2udx2-rmu*d2udy2-s[i,j,1]) # x-mtm
-            u[i,j,2] = uold[i,j,2]-dt[i,j]/rho*(rho*uold[i,j,2]*dvdx+rho*uold[i,j,1]*dvdy+dpdy-rmu*d2vdx2-rmu*d2vdy2-s[i,j,2]) # y-mtm
+            u[i,j,2] = uold[i,j,2]-dt[i,j]/rho*(rho*uold[i,j,1]*dvdx+rho*uold[i,j,2]*dvdy+dpdy-rmu*d2vdx2-rmu*d2vdy2-s[i,j,2]) # y-mtm
     # check iterative convergence? I think it calls that in the main function
         
 # ************************************************************************
@@ -996,9 +996,9 @@ def check_iterative_convergence(n, res, resinit, ninit, rtime, dtmin):
                 d2udy2 = (u[i,j+1,1]-2*u[i,j,1]+u[i,j-1,1])/(dy**2)       # Second derivative of x velocity w.r.t. y
                 d2vdy2 = (u[i,j+1,2]-2*u[i,j,2]+u[i,j-1,2])/(dy**2)       # Second derivative of y velocity w.r.t. y
     
-                R0 += (rho*dudx+rho*dvdy-s[i,j,0])**2 # mass residual squared
+                R0 += (rho*dudx+rho*dvdy-S-s[i,j,0])**2 # mass residual squared
                 R1 += (rho*u[i,j,1]*dudx+rho*u[i,j,2]*dudy+dpdx-rmu*d2udx2-rmu*d2udy2-s[i,j,1])**2 # x-mtm residual squared
-                R2 += (rho*u[i,j,2]*dvdx+rho*u[i,j,1]*dvdy+dpdy-rmu*d2vdx2-rmu*d2vdy2-s[i,j,2])**2 # y-mtm residual squared
+                R2 += (rho*u[i,j,1]*dvdx+rho*u[i,j,2]*dvdy+dpdy-rmu*d2vdx2-rmu*d2vdy2-s[i,j,2])**2 # y-mtm residual squared
     
     N = (imax-2)*(jmax-2) # num of nodes excluding boundaries
     res0 = np.sqrt(R0/N)
@@ -1020,7 +1020,7 @@ def check_iterative_convergence(n, res, resinit, ninit, rtime, dtmin):
 
 
     # Write iterative residuals every 10 iterations
-    if n % 10 == 0 or n == ninit:
+    if n % residualOut == 0 or n == ninit:
         fp1.write(str(n)+" "+str(rtime)+" " +
                   str(res[0])+" "+str(res[1])+" "+str(res[2]) + "\n")
         print(str(n)+" "+str(rtime)+" "+str(dtmin)+" " +
@@ -1028,7 +1028,7 @@ def check_iterative_convergence(n, res, resinit, ninit, rtime, dtmin):
         # Maybe a need to format this better
 
     # Write header for iterative residuals every 200 iterations
-    if n % 200 == 0 or n == ninit:
+    if n % residualOut*20 == 0 or n == ninit:
         print("Iter."+" "+"Time (s)"+" "+"dt (s)"+" " +
               "Continuity"+" "+"x-Momentum"+" "+"y-Momentum\n")
 
