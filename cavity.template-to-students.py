@@ -76,8 +76,8 @@ lim = 0
 residualOut = 100          # Number of timesteps between residual output
 
 cfl = 1               # CFL number used to determine time step
-Cx = 0.01               # Parameter for 4th order artificial viscosity in x
-Cy = 0.01               # Parameter for 4th order artificial viscosity in y
+Cx = 0.0               # Parameter for 4th order artificial viscosity in x
+Cy = 0.0               # Parameter for 4th order artificial viscosity in y
 toler = 1.e-10          # Tolerance for iterative residual convergence
 rkappa = 0.1            # Time derivative preconditioning constant
 Re = 10.0              # Reynolds number = rho*Uinf*L/rmu
@@ -725,6 +725,8 @@ def Compute_Artificial_Viscosity():
     # Section 6: Incompressible Flows - Pages 17-19
     # only second interior points included due to stencil. need modification near boundary
     # also some global variables are unused, but I think those are for the 2nd order FDE option and not required?
+
+    # x-direction stencil
     for i in range(2,imax-2):
             for j in range(1,jmax-1):
                 uvel = u[i,j,1] # u velocity
@@ -739,6 +741,7 @@ def Compute_Artificial_Viscosity():
                 mueffx = -abs(lambda_x)*Cx*dx**3/(beta2)
                 artviscx[i,j] = mueffx*d4pdx4
 
+    # y-direction stencil
     for i in range(1,imax-1):
         for j in range(2,jmax-2):
                 uvel = u[i,j,1] # u velocity
@@ -975,6 +978,14 @@ def check_iterative_convergence(n, res, resinit, ninit, rtime, dtmin):
     R0 = 0
     R1 = 0
     R2 = 0
+
+    # DELETE LATER
+    mass_values = np.zeros((imax-2, jmax-2))
+    div_values = np.zeros((imax-2, jmax-2))
+    source_values = np.zeros((imax-2, jmax-2))
+    av_values = np.zeros((imax-2, jmax-2))
+    # DELETE LATER
+
     for i in range(1,imax-1):
             for j in range(1,jmax-1):
                 uvel = u[i,j,1] # u velocity
@@ -995,7 +1006,14 @@ def check_iterative_convergence(n, res, resinit, ninit, rtime, dtmin):
                 d2vdx2 = (u[i+1,j,2]-2*u[i,j,2]+u[i-1,j,2])/(dx**2)       # Second derivative of y velocity w.r.t. x
                 d2udy2 = (u[i,j+1,1]-2*u[i,j,1]+u[i,j-1,1])/(dy**2)       # Second derivative of x velocity w.r.t. y
                 d2vdy2 = (u[i,j+1,2]-2*u[i,j,2]+u[i,j-1,2])/(dy**2)       # Second derivative of y velocity w.r.t. y
-    
+
+                # DELETE LATER
+                mass_values[i-1,j-1] = rho*dudx + rho*dvdy - S - s[i,j,0]
+                div_values[i-1,j-1] = rho*(dudx+dvdy)
+                source_values[i-1,j-1] = s[i,j,0]
+                av_values[i-1,j-1] = S
+                # DELETE LATER
+                
                 R0 += (rho*dudx+rho*dvdy-S-s[i,j,0])**2 # mass residual squared
                 R1 += (rho*u[i,j,1]*dudx+rho*u[i,j,2]*dudy+dpdx-rmu*d2udx2-rmu*d2udy2-s[i,j,1])**2 # x-mtm residual squared
                 R2 += (rho*u[i,j,1]*dvdx+rho*u[i,j,2]*dvdy+dpdy-rmu*d2vdx2-rmu*d2vdy2-s[i,j,2])**2 # y-mtm residual squared
@@ -1028,12 +1046,72 @@ def check_iterative_convergence(n, res, resinit, ninit, rtime, dtmin):
         # Maybe a need to format this better
 
     # Write header for iterative residuals every 200 iterations
-    if n % residualOut*20 == 0 or n == ninit:
+    if n % (residualOut*20) == 0 or n == ninit:
         print("Iter."+" "+"Time (s)"+" "+"dt (s)"+" " +
               "Continuity"+" "+"x-Momentum"+" "+"y-Momentum\n")
 
+    # DELETE LATER
+    if n % 1000 == 0:
+        print("Max pressure change:",
+        np.max(np.abs(u[:,:,0]-uold[:,:,0])))
+
+        print("Max velocity change:",
+        np.max(np.abs(u[:,:,1:3]-uold[:,:,1:3])))
+
+        print("Max artificial viscosity:",
+        np.max(np.abs(artviscx+artviscy)))
+    
+    if n % 1000 == 0:
+        print("Mean continuity:", np.mean(mass_values))
+        print("RMS continuity:", np.sqrt(np.mean(mass_values**2)))
+        print("Std continuity:", np.std(mass_values))
+        print("Min continuity:", np.min(mass_values))
+        print("Max continuity:", np.max(mass_values))
+
+    if n % 1000 == 0:
+        print("Mean divergence:", np.mean(div_values))
+        print("Mean mass source:", np.mean(source_values))
+        print("Mean artificial viscosity:", np.mean(av_values))
+
+        print("Mean continuity balance:", np.mean(div_values-source_values-av_values))
+    # DELETE LATER
+
     return res, resinit, conv
 
+# DELETE LATER
+def debug_mms_continuity():
+    global imax, jmax, dx, dy, xmin, ymin, rho, s
+
+    residuals = []
+
+    for i in range(1, imax-1):
+        for j in range(1, jmax-1):
+
+            x = xmin + i*dx
+            y = ymin + j*dy
+
+            dudx = (
+                umms(x+dx, y, 1) -
+                umms(x-dx, y, 1)
+            ) / (2*dx)
+
+            dvdy = (
+                umms(x, y+dy, 2) -
+                umms(x, y-dy, 2)
+            ) / (2*dy)
+
+            R = rho*(dudx+dvdy) - s[i,j,0]
+
+            residuals.append(R)
+
+    residuals = np.array(residuals)
+
+    print("MMS exact-field continuity residual:")
+    print("Mean:", np.mean(residuals))
+    print("RMS:", np.sqrt(np.mean(residuals**2)))
+    print("Min:", np.min(residuals))
+    print("Max:", np.max(residuals))
+# DELETE LATER
 
 # ************************************************************************
 def Discretization_Error_Norms(rL1norm, rL2norm, rLinfnorm):
@@ -1177,6 +1255,10 @@ write_output(ninit, resinit, rtime)
 # (only interior points; will be zero for standard cavity)
 compute_source_terms()
 
+# DELETE LATER
+debug_mms_continuity()
+# DELETE LATER
+
 # ========== Main Loop ==========
 isConverged = 0
 
@@ -1216,6 +1298,20 @@ for n in np.arange(ninit, nmax, 1):
 
         # Set Boundary Conditions for u
         set_boundary_conditions()
+
+        # DELETE LATER
+        if n % 1000 == 0:
+            dp_before = u[1:-1,1:-1,0] - uold[1:-1,1:-1,0]
+            print("Mean pressure update BEFORE rescaling:", np.mean(dp_before))
+            print("Max pressure update BEFORE rescaling:", np.max(np.abs(dp_before)))
+
+        pressure_rescaling()
+
+        if n % 1000 == 0:
+            dp_after = u[1:-1,1:-1,0] - uold[1:-1,1:-1,0]
+            print("Max pressure update AFTER rescaling:", np.max(np.abs(dp_after)))
+        # DELETE LATER
+
     else:
         print("ERROR: isgs must equal 0 or 1!\n")
 
